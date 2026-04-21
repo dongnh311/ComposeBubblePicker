@@ -37,9 +37,8 @@ fun BubblePicker(
     val density = LocalDensity.current
     val itemsSnapshot = state.items.toList()
     val itemsById = remember(itemsSnapshot) { itemsSnapshot.associateBy { it.id } }
-    val selectedIds = state.selectedIds
 
-    LaunchedEffect(itemsSnapshot, selectedIds, style, density) {
+    LaunchedEffect(itemsSnapshot, state.selectedIds, style, density) {
         syncPhysicsWorld(state, style, density)
         state.wake()
     }
@@ -54,7 +53,7 @@ fun BubblePicker(
                 detectDragGestures(
                     onDragStart = { offset ->
                         val worldPoint = toWorld(offset, size)
-                        val hit = hitTest(state, style, worldPoint) ?: return@detectDragGestures
+                        val hit = hitTest(state, itemsById, worldPoint) ?: return@detectDragGestures
                         pinnedId = hit.id
                         state.world.pin(hit.id, worldPoint)
                         state.wake()
@@ -79,11 +78,11 @@ fun BubblePicker(
                 detectTapGestures(
                     onTap = { offset ->
                         val worldPoint = toWorld(offset, size)
-                        hitTest(state, style, worldPoint)?.let(onItemTap)
+                        hitTest(state, itemsById, worldPoint)?.let(onItemTap)
                     },
                     onLongPress = { offset ->
                         val worldPoint = toWorld(offset, size)
-                        hitTest(state, style, worldPoint)?.let(onItemLongPress)
+                        hitTest(state, itemsById, worldPoint)?.let(onItemLongPress)
                     },
                 )
             },
@@ -113,42 +112,25 @@ private fun syncPhysicsWorld(
         return
     }
 
-    val effectiveRadiusById: Map<Long, Float> = items.associate {
-        it.id to effectiveRadius(it, style, density, state.selectedIds)
+    val radiusOf: (BubbleItem) -> Float = { item ->
+        val base = weightToRadiusPx(item.weight, style, density)
+        if (item.id in state.selectedIds) base * style.selectedScale else base
     }
 
     if (state.world.bubbles.isEmpty()) {
-        val packed = CirclePacker.pack(items.map { it.id to effectiveRadiusById.getValue(it.id) })
-        packed.forEach { state.world.add(it) }
+        CirclePacker.pack(items.map { it.id to radiusOf(it) })
+            .forEach { state.world.add(it) }
         return
     }
 
     val desiredIds: Set<Long> = items.map { it.id }.toSet()
     val presentIds: Set<Long> = state.world.bubbles.map { it.id }.toSet()
 
-    val toRemove = presentIds - desiredIds
-    toRemove.forEach { state.world.remove(it) }
-
-    val toAdd = items.filter { it.id !in presentIds }
-    toAdd.forEach { item ->
-        state.world.addWithAutoPlacement(item.id, effectiveRadiusById.getValue(item.id))
+    (presentIds - desiredIds).forEach { state.world.remove(it) }
+    items.filter { it.id !in presentIds }.forEach { item ->
+        state.world.addWithAutoPlacement(item.id, radiusOf(item))
     }
-
-    // Sync radii for every bubble so that the selected scale participates in
-    // collision resolution (selected bubbles push neighbors out of the way).
-    items.forEach { item ->
-        state.world.setRadius(item.id, effectiveRadiusById.getValue(item.id))
-    }
-}
-
-private fun effectiveRadius(
-    item: BubbleItem,
-    style: BubbleStyle,
-    density: Density,
-    selectedIds: Set<Long>,
-): Float {
-    val base = weightToRadiusPx(item.weight, style, density)
-    return if (item.id in selectedIds) base * style.selectedScale else base
+    items.forEach { state.world.setRadius(it.id, radiusOf(it)) }
 }
 
 private fun weightToRadiusPx(weight: Float, style: BubbleStyle, density: Density): Float {
@@ -163,18 +145,17 @@ private fun toWorld(canvasPoint: Offset, size: IntSize): Vec2 =
 
 private fun hitTest(
     state: BubblePickerState,
-    style: BubbleStyle,
+    itemsById: Map<Long, BubbleItem>,
     worldPoint: Vec2,
 ): BubbleItem? {
     val bubbles = state.world.bubbles
-    val items = state.items
     for (i in bubbles.indices.reversed()) {
         val bubble = bubbles[i]
         val radius = bubble.radius
         val dx = worldPoint.x - bubble.position.x
         val dy = worldPoint.y - bubble.position.y
         if (dx * dx + dy * dy <= radius * radius) {
-            return items.firstOrNull { it.id == bubble.id }
+            return itemsById[bubble.id]
         }
     }
     return null

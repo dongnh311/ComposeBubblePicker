@@ -31,8 +31,6 @@ internal fun DrawScope.drawBubble(
     textMeasurer: TextMeasurer,
     imageBitmap: ImageBitmap?,
 ) {
-    // Bubble.radius is pre-scaled by the selection sync in BubblePicker, so the
-    // selected visual size matches the physics collision radius.
     val radius = bubble.radius
     val center = Offset(bubble.position.x, bubble.position.y)
 

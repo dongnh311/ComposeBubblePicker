@@ -8,19 +8,19 @@ import kotlin.random.Random
 class PhysicsWorld(val config: PhysicsConfig = PhysicsConfig()) {
 
     private val _bubbles: MutableList<Bubble> = ArrayList()
+    private val bubblesById: HashMap<Long, Bubble> = HashMap()
     val bubbles: List<Bubble> get() = _bubbles
 
     private val random = Random(config.seed)
 
     fun add(bubble: Bubble) {
         _bubbles.add(bubble)
+        bubblesById[bubble.id] = bubble
     }
 
     fun addWithAutoPlacement(id: Long, radius: Float): Bubble {
         if (_bubbles.isEmpty()) {
-            val b = Bubble(id, Vec2.ZERO, radius)
-            _bubbles.add(b)
-            return b
+            return addAt(id, Vec2.ZERO, radius)
         }
 
         val clusterRadius = CirclePacker.boundingRadius(_bubbles)
@@ -31,50 +31,47 @@ class PhysicsWorld(val config: PhysicsConfig = PhysicsConfig()) {
         repeat(12) {
             val candidate = Vec2(cos(theta) * placementRadius, sin(theta) * placementRadius)
             if (!overlapsAny(candidate, radius)) {
-                val b = Bubble(id, candidate, radius)
-                _bubbles.add(b)
-                return b
+                return addAt(id, candidate, radius)
             }
             theta += ANGLE_RETRY_STEP
         }
 
         val fallback = Vec2(cos(theta) * placementRadius, sin(theta) * placementRadius)
-        val b = Bubble(id, fallback, radius)
-        _bubbles.add(b)
-        return b
+        return addAt(id, fallback, radius)
     }
 
     fun remove(id: Long) {
-        val index = _bubbles.indexOfFirst { it.id == id }
-        if (index >= 0) _bubbles.removeAt(index)
+        val bubble = bubblesById.remove(id) ?: return
+        _bubbles.remove(bubble)
     }
 
     fun clear() {
         _bubbles.clear()
+        bubblesById.clear()
     }
 
     fun pin(id: Long, position: Vec2) {
-        val bubble = _bubbles.firstOrNull { it.id == id } ?: return
+        val bubble = bubblesById[id] ?: return
         bubble.pinned = true
         bubble.position = position
         bubble.prevPosition = position
     }
 
     fun updatePinned(id: Long, position: Vec2) {
-        val bubble = _bubbles.firstOrNull { it.id == id } ?: return
+        val bubble = bubblesById[id] ?: return
         if (!bubble.pinned) return
         bubble.position = position
         bubble.prevPosition = position
     }
 
     fun unpin(id: Long) {
-        val bubble = _bubbles.firstOrNull { it.id == id } ?: return
+        val bubble = bubblesById[id] ?: return
         bubble.pinned = false
         bubble.prevPosition = bubble.position
     }
 
     fun setRadius(id: Long, radius: Float) {
-        _bubbles.firstOrNull { it.id == id }?.radius = radius
+        bubblesById[id]?.radius = radius
     }
 
     fun isAtRest(): Boolean {
@@ -98,6 +95,13 @@ class PhysicsWorld(val config: PhysicsConfig = PhysicsConfig()) {
         repeat(config.constraintIterations) {
             resolveCollisions()
         }
+    }
+
+    private fun addAt(id: Long, position: Vec2, radius: Float): Bubble {
+        val bubble = Bubble(id, position, radius)
+        _bubbles.add(bubble)
+        bubblesById[id] = bubble
+        return bubble
     }
 
     private fun integrate() {
