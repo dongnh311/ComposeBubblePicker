@@ -17,12 +17,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.dongnh.bubblepickerdemo.DemoActivity"
-            android:screenOrientation="portrait"
-            android:exported="false"
-            android:theme="@style/AppTheme"></activity>
-
     </application>
 
 </manifest>
