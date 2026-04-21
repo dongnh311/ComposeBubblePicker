@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] — Unreleased
+## [1.0.0] — 2026-04-21
 
 Full rewrite inspired by [`igalata/Bubble-Picker`](https://github.com/igalata/Bubble-Picker).
 No code is shared with the original; the UX concept and visual language are
