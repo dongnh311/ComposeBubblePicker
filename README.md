@@ -1,131 +1,141 @@
-# Bubble-Picker
+# ComposeBubblePicker
 
-[![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)]()
+[![JitPack](https://jitpack.io/v/dongnh311/ComposeBubblePicker.svg)](https://jitpack.io/#dongnh311/ComposeBubblePicker)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![minSdk](https://img.shields.io/badge/minSdk-21-green.svg)](#requirements)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.1.0-blue.svg)](https://kotlinlang.org)
 
-<a href='https://play.google.com/store/apps/details?id=com.igalata.bubblepickerdemo&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="70" width="180"/></a>
+A Compose-first bubble picker for Android: draggable, physics-driven bubbles
+rendered with `Canvas` and a pure-Kotlin Position-Based Dynamics solver. No
+OpenGL, no JBox2D, no third-party physics engine.
 
-Check this [project on dribbble](https://dribbble.com/shots/3349372-Bubble-Picker-Open-Source-Component)
+This library is a full rewrite inspired by
+[`igalata/Bubble-Picker`](https://github.com/igalata/Bubble-Picker) (MIT).
+No code is shared with the original; the UX concept and visual language are
+the only inheritance.
 
-Read how we did it [on Medium](https://medium.com/@igalata13/how-to-create-a-bubble-selection-animation-on-android-627044da4854#.ajonc010b)
-
-<img src="shot.gif"/>
+> Screenshot / GIF pending — will be added after the v1.0.0 smoke test.
 
 ## Requirements
-- Android SDK 16+
-- Support run on fragment.
-- Max target is 33.
 
-## Usage
+- Android `minSdk` 21 · `compileSdk` / `targetSdk` 35
+- Kotlin 2.1.x
+- JVM target 17
+- Compose BOM 2024.12.01+ (the library ships with its own Compose dependencies)
 
-Add to your root build.gradle:
-```Groovy
-'Clone andadd module to project.'
-```
+## Install
 
-Add the dependency:
-```Groovy
-'N/A.'
-```
+Add the JitPack repository to your **settings.gradle.kts**:
 
-## How to use this library
-
-Don't add `BubblePicker` to your xml layout. Please using it on code. Only init and add it to view.
-
-```kotlin 
-picker = BubblePicker(this.requireContext(), null)
-view.add(picker)
-```
-
-Override onResume() and onPause() methods to call the same methods from the `BubblePicker`
-
-Kotlin
 ```kotlin
-override fun onResume() {
-      super.onResume()
-      picker.onResume()
-}
-
-override fun onPause() {
-      super.onPause()
-      picker.onPause()
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
 }
 ```
 
-Pass the `PickerItem` list to the `BubblePicker`
+Then depend on the library from your app module:
 
-Kotlin
 ```kotlin
-val titles = resources.getStringArray(R.array.countries)
-val colors = resources.obtainTypedArray(R.array.colors)
-val images = resources.obtainTypedArray(R.array.images)
-
-picker.adapter = object : BubblePickerAdapter {
-
-            override val totalCount = titles.size
-
-            override fun getItem(position: Int): PickerItem {
-                return PickerItem().apply {
-                    title = titles[position]
-                    gradient = BubbleGradient(colors.getColor((position * 2) % 8, 0),
-                            colors.getColor((position * 2) % 8 + 1, 0), BubbleGradient.VERTICAL)
-                    typeface = mediumTypeface
-                    textColor = ContextCompat.getColor(this@DemoActivity, android.R.color.white)
-                    backgroundImage = ContextCompat.getDrawable(this@DemoActivity, images.getResourceId(position, 0))
-                }
-            }
+dependencies {
+    implementation("com.github.dongnh311:ComposeBubblePicker:v1.0.0")
 }
 ```
 
-Specify the `BubblePickerListener` to get notified about events
+## Quick Start
 
-Kotlin
 ```kotlin
-picker.listener = object : BubblePickerListener {
-            override fun onBubbleSelected(item: PickerItem) {
+@Composable
+fun BrandPicker() {
+    val items = remember {
+        listOf(
+            BubbleItem(id = 1, text = "Gucci", weight = 1.2f,
+                gradient = BubbleGradient(
+                    startColor = Color(0xFFE57373),
+                    endColor = Color(0xFFBA68C8),
+                )),
+            BubbleItem(id = 2, text = "Prada", weight = 0.9f,
+                backgroundColor = Color(0xFF1E88E5)),
+            BubbleItem(id = 3, text = "Chanel", weight = 1f,
+                backgroundImageUrl = "https://example.com/logo.png"),
+        )
+    }
 
-            }
+    val state = rememberBubblePickerState(items = items)
 
-            override fun onBubbleDeselected(item: PickerItem) {
-
-            }
+    BubblePicker(
+        state = state,
+        modifier = Modifier.fillMaxSize(),
+        onItemTap = { state.toggle(it.id) },
+        onItemLongPress = { state.removeItem(it.id) },
+    )
 }
 ```
 
-To get all selected items use `picker.selectedItems` variable in Kotlin or `picker.getSelectedItems()` method in Java.
+### Runtime mutations
 
-For more usage examples please review the sample app
+```kotlin
+state.addItem(BubbleItem(id = 99, text = "Fendi"))
+state.addItems(listOf(/* ... */))
+state.removeItem(id = 2)
+state.clear()
+state.select(id = 1)
+state.deselectAll()
+```
 
-## Changelog
+### Styling
 
-### Version: 1.0
+```kotlin
+BubblePicker(
+    state = state,
+    style = BubbleStyle(
+        minRadius = 48.dp,
+        maxRadius = 96.dp,
+        selectedFill = Color.Black,
+        selectedTextColor = Color.White,
+        selectedScale = 1.2f,
+        fontSize = 15.sp,
+        imageOpacity = 0.8f,
+    ),
+)
+```
 
-* Added a possibility to setup the `BubblePicker` using `BubblePickerAdapter`
+## Migration from `igalata/Bubble-Picker`
 
-## Known iOS versions of the animation
+| Before | After |
+|---|---|
+| `com.igalata.bubblepicker` | `com.dongnh.bubblepicker` |
+| `BubblePicker` (`GLSurfaceView`) | `BubblePicker` (Composable) |
+| `BubblePickerAdapter.getItem(pos)` | `List<BubbleItem>` passed to `rememberBubblePickerState` |
+| `BubblePickerListener` | `onItemTap` / `onItemLongPress` lambdas |
+| `PickerItem.gradient = BubbleGradient(0xFFRRGGBB, ...)` | `BubbleItem(gradient = BubbleGradient(Color(0xFFRRGGBB), ...))` |
+| `picker.adapter = ...` / `onResume` / `onPause` | Stateless — just compose `BubblePicker(state)` |
 
-* https://github.com/Ronnel/BubblePicker
-* https://github.com/efremidze/Magnetic
+`minSdk` is now 21 (was 16). The legacy API is still available under
+`com.dongnh.bubblepicker.legacy` for XML-based apps that can't migrate yet.
+
+## Legacy XML API
+
+For projects that still need an XML-based component, the library ships an
+`AbstractComposeView` wrapper:
+
+```kotlin
+import com.dongnh.bubblepicker.legacy.BubblePickerView
+import com.dongnh.bubblepicker.legacy.BubblePickerAdapter
+import com.dongnh.bubblepicker.legacy.BubblePickerListener
+import com.dongnh.bubblepicker.legacy.PickerItem
+```
+
+All four types are marked `@Deprecated` with `ReplaceWith` hints pointing at
+the Composable API. `PickerItem` keeps most of its original fields for source
+compatibility, but the following are **accepted but not rendered in v1.0.0**:
+`icon`, `iconOnTop`, `overlayAlpha`, `typeface`, `textSize`,
+`showImageOnUnSelected`, `isViewBorderSelected`, `colorBorderSelected`,
+`strokeWidthBorder`, `customData`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-MIT License
-
-Copyright (c) 2017 Irina Galata
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+[Apache 2.0](LICENSE).

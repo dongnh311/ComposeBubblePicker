@@ -54,7 +54,6 @@ class PhysicsWorldStabilityTest {
         }
     }
 
-    @Ignore("Manual benchmark — enable locally to confirm <200ms on dev laptop")
     @Test
     fun benchmark_fifty_bubbles_one_thousand_steps() {
         val world = buildWorld(seed = 99L, count = 50)
