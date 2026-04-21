@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BubblePickerView">
+        <attr name="backgroundColor" format="color" />
+        <attr name="strokeColor" format="color" />
+        <attr name="strokeWidth" format="dimension" />
+        <attr name="minRadius" format="dimension" />
+        <attr name="maxRadius" format="dimension" />
+    </declare-styleable>
+</resources>
