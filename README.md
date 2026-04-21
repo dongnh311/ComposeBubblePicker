@@ -14,7 +14,7 @@ This library is a full rewrite inspired by
 No code is shared with the original; the UX concept and visual language are
 the only inheritance.
 
-> Screenshot / GIF pending — will be added after the v1.0.0 smoke test.
+<p align="center"><img src="art/screenshot.png" width="320" alt="ComposeBubblePicker sample" /></p>
 
 ## Requirements
 
