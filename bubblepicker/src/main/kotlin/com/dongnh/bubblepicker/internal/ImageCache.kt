@@ -32,8 +32,9 @@ internal fun ImageCacheLoader(state: BubblePickerState) {
 private suspend fun loadInto(context: Context, state: BubblePickerState, item: BubbleItem) {
     val url = item.backgroundImageUrl ?: return
     val bitmap = runCatching { fetchBitmap(context, url) }.getOrNull() ?: return
+    // SnapshotStateMap update is observable and will invalidate the Canvas
+    // drawing that reads state.imageCache. No need to wake the physics loop.
     state.imageCache[item.id] = bitmap
-    state.wake()
 }
 
 private suspend fun fetchBitmap(context: Context, url: String): ImageBitmap? {

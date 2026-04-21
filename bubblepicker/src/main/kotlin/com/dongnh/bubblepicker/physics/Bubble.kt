@@ -3,13 +3,16 @@ package com.dongnh.bubblepicker.physics
 class Bubble(
     val id: Long,
     position: Vec2,
-    val radius: Float,
+    radius: Float,
     pinned: Boolean = false,
 ) {
     var position: Vec2 = position
         internal set
 
     var prevPosition: Vec2 = position
+        internal set
+
+    var radius: Float = radius
         internal set
 
     var pinned: Boolean = pinned

@@ -37,8 +37,9 @@ fun BubblePicker(
     val density = LocalDensity.current
     val itemsSnapshot = state.items.toList()
     val itemsById = remember(itemsSnapshot) { itemsSnapshot.associateBy { it.id } }
+    val selectedIds = state.selectedIds
 
-    LaunchedEffect(itemsSnapshot, style, density) {
+    LaunchedEffect(itemsSnapshot, selectedIds, style, density) {
         syncPhysicsWorld(state, style, density)
         state.wake()
     }
@@ -112,10 +113,12 @@ private fun syncPhysicsWorld(
         return
     }
 
-    val radiusById: Map<Long, Float> = items.associate { it.id to weightToRadiusPx(it.weight, style, density) }
+    val effectiveRadiusById: Map<Long, Float> = items.associate {
+        it.id to effectiveRadius(it, style, density, state.selectedIds)
+    }
 
     if (state.world.bubbles.isEmpty()) {
-        val packed = CirclePacker.pack(items.map { it.id to radiusById.getValue(it.id) })
+        val packed = CirclePacker.pack(items.map { it.id to effectiveRadiusById.getValue(it.id) })
         packed.forEach { state.world.add(it) }
         return
     }
@@ -128,8 +131,24 @@ private fun syncPhysicsWorld(
 
     val toAdd = items.filter { it.id !in presentIds }
     toAdd.forEach { item ->
-        state.world.addWithAutoPlacement(item.id, radiusById.getValue(item.id))
+        state.world.addWithAutoPlacement(item.id, effectiveRadiusById.getValue(item.id))
     }
+
+    // Sync radii for every bubble so that the selected scale participates in
+    // collision resolution (selected bubbles push neighbors out of the way).
+    items.forEach { item ->
+        state.world.setRadius(item.id, effectiveRadiusById.getValue(item.id))
+    }
+}
+
+private fun effectiveRadius(
+    item: BubbleItem,
+    style: BubbleStyle,
+    density: Density,
+    selectedIds: Set<Long>,
+): Float {
+    val base = weightToRadiusPx(item.weight, style, density)
+    return if (item.id in selectedIds) base * style.selectedScale else base
 }
 
 private fun weightToRadiusPx(weight: Float, style: BubbleStyle, density: Density): Float {
@@ -151,11 +170,10 @@ private fun hitTest(
     val items = state.items
     for (i in bubbles.indices.reversed()) {
         val bubble = bubbles[i]
-        val isSelected = bubble.id in state.selectedIds
-        val effectiveRadius = bubble.radius * if (isSelected) style.selectedScale else 1f
+        val radius = bubble.radius
         val dx = worldPoint.x - bubble.position.x
         val dy = worldPoint.y - bubble.position.y
-        if (dx * dx + dy * dy <= effectiveRadius * effectiveRadius) {
+        if (dx * dx + dy * dy <= radius * radius) {
             return items.firstOrNull { it.id == bubble.id }
         }
     }

@@ -35,13 +35,13 @@ object SampleData {
     fun initialItems(): List<BubbleItem> = BRANDS.mapIndexed { index, name ->
         val id = index.toLong()
         val weight = 0.7f + (index % 5) * 0.25f
-        val mode = index % 3
+        val useGradient = index % 2 == 0
         BubbleItem(
             id = id,
             text = name,
             weight = weight,
-            gradient = if (mode == 0) GRADIENTS[index % GRADIENTS.size] else null,
-            backgroundColor = if (mode == 1) SOLIDS[index % SOLIDS.size] else null,
+            gradient = if (useGradient) GRADIENTS[index % GRADIENTS.size] else null,
+            backgroundColor = if (!useGradient) SOLIDS[index % SOLIDS.size] else null,
             backgroundImageUrl = if (index % 5 == 0) "https://picsum.photos/200?random=$id" else null,
             textColor = Color.White,
         )

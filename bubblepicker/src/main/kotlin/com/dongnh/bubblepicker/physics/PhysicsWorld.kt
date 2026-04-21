@@ -73,6 +73,10 @@ class PhysicsWorld(val config: PhysicsConfig = PhysicsConfig()) {
         bubble.prevPosition = bubble.position
     }
 
+    fun setRadius(id: Long, radius: Float) {
+        _bubbles.firstOrNull { it.id == id }?.radius = radius
+    }
+
     fun isAtRest(): Boolean {
         val threshold = config.restVelocityThreshold * config.restVelocityThreshold
         for (b in _bubbles) {
