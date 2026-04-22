@@ -1,6 +1,6 @@
 # ComposeBubblePicker
 
-[![JitPack](https://jitpack.io/v/dongnh311/ComposeBubblePicker.svg)](https://jitpack.io/#dongnh311/ComposeBubblePicker)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.dongnh311/compose-bubble-picker.svg)](https://central.sonatype.com/artifact/io.github.dongnh311/compose-bubble-picker)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![minSdk](https://img.shields.io/badge/minSdk-21-green.svg)](#requirements)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1.0-blue.svg)](https://kotlinlang.org)
@@ -25,23 +25,25 @@ the only inheritance.
 
 ## Install
 
-Add the JitPack repository to your **settings.gradle.kts**:
+The library is published to Maven Central. Make sure `mavenCentral()` is in
+your repositories:
 
 ```kotlin
+// settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
     }
 }
 ```
 
-Then depend on the library from your app module:
+Then depend on the library:
 
 ```kotlin
+// app/build.gradle.kts
 dependencies {
-    implementation("com.github.dongnh311:ComposeBubblePicker:v1.0.0")
+    implementation("io.github.dongnh311:compose-bubble-picker:1.0.0")
 }
 ```
 
